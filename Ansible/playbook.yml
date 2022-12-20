@@ -1,0 +1,11 @@
+---
+- name: Install Docker and Build application
+  hosts: variable_host
+  become: true
+  roles:
+    - role: delivery_application
+      tags: [delivery]
+    - role: install_docker
+      tags: [install_docker]
+    - role: build_application
+      tags: [build]

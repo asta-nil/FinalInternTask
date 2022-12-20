@@ -1,0 +1,72 @@
+name: Ansible
+
+on:
+  workflow_call:
+    secrets:
+      PRIVATE_KEY:
+        description: "private key"
+        required: true
+      IP_ADRESS:
+        description: "ip adress"
+        required: true
+      USERNAME:
+        description: "username"
+        required: true
+    inputs:
+      username:
+        type: string
+        required: true
+      ip_adress:
+        type: string
+        required: true
+
+  workflow_dispatch:
+
+
+jobs:
+  ansible_playbook:
+    if: ${{ inputs.username != '' }}
+    runs-on: ubuntu-latest
+    name: ansible_playbook
+
+    steps:
+
+      - name: Git-checkout
+        uses: actions/checkout@v3
+
+      - name: Run ansible playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbook.yml
+          key: ${{ secrets.PRIVATE_KEY }}
+          directory: ./Ansible/
+          inventory: |
+            [variable_host]
+            ${{ inputs.ip_adress }}
+          options: |
+            -u ${{ inputs.username }} -t install_docker,build
+        continue-on-error: true
+  
+  ansible_playbook_with_secrets:
+    if: ${{ inputs.username == '' }}
+    runs-on: ubuntu-latest
+    name: ansible_playbook_with_secrets
+
+    steps:
+
+      - name: Git-checkout
+        uses: actions/checkout@v3
+
+      - name: Run ansible playbook with secrets
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbook.yml
+          key: ${{ secrets.PRIVATE_KEY }}
+          directory: ./Ansible/
+          inventory: |
+            [variable_host]
+            ${{ secrets.IP_ADRESS }}
+          options: |
+            -u ${{ secrets.USERNAME }} -t install_docker,build
+        continue-on-error: true
+        

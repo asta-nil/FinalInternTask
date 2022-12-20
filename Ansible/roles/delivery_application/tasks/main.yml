@@ -1,0 +1,4 @@
+- name: Delivery application
+  copy:
+    src: "{{ source_directory }}"
+    dest: "{{ project_directory }}"

@@ -1,0 +1,83 @@
+name: Terraform
+
+on: 
+  workflow_call:
+    secrets:
+      AZURE_CLIENT_ID:
+        description: "client id"
+        required: true
+      AZURE_CLIENT_SECRET:
+        description: "client secret"
+        required: true
+      MVP_SUBSCRIPTION:
+        description: "subscription"
+        required: true
+      AZURE_TENANT_ID:
+        description: "tenant id"
+        required: true
+      PUBLIC_KEY:
+        description: "public key"
+        required: true
+    outputs:
+      username:
+        description: "Username for vm"
+        value: ${{ jobs.terraform_apply.outputs.username }}
+      ip_adress:
+        description: "Static Ip-adress of vm"
+        value: ${{ jobs.terraform_apply.outputs.ip_adress }}
+
+  workflow_dispatch:
+  
+jobs:
+
+  terraform_apply:  
+    runs-on: ubuntu-latest
+    name: terraform_apply
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.MVP_SUBSCRIPTION }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    outputs:
+      username: ${{ steps.get_env.outputs.username }}
+      ip_adress: ${{ steps.get_env.outputs.ip_adress }}
+
+    steps:
+
+      - name: Git-checkout
+        uses: actions/checkout@v3
+
+      - name: Terraform-checkout
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      
+      - name: Terraform Init
+        id: init
+        run: terraform init -var "public_key=${{ secrets.PUBLIC_KEY }}"
+        working-directory: Terraform
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        working-directory: Terraform
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var "public_key=${{ secrets.PUBLIC_KEY }}" -no-color
+        continue-on-error: true
+        working-directory: Terraform
+
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -var "public_key=${{ secrets.PUBLIC_KEY }}" -no-color -auto-approve
+        continue-on-error: true
+        working-directory: Terraform
+
+      - name: Get terraform environment
+        id: get_env
+        run: |
+          cd Terraform
+          echo "::set-output name=username::$(terraform output -raw user_name)"
+          echo "::set-output name=ip_adress::$(terraform output -raw public_ip)"

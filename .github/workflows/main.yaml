@@ -1,0 +1,29 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - "master"
+  workflow_dispatch:
+
+jobs:
+  start_terraform:
+    uses: ./.github/workflows/terraform.yaml
+    secrets: inherit
+
+  start_app:
+    needs: start_terraform
+    uses: ./.github/workflows/app.yaml
+    with:
+      username: ${{ needs.start_terraform.outputs.username }}
+      ip_adress: ${{ needs.start_terraform.outputs.ip_adress }}
+    secrets: inherit
+
+  start_ansible:
+    needs: [start_app, start_terraform]
+    uses: ./.github/workflows/ansible.yaml 
+    with:
+      username: ${{ needs.start_terraform.outputs.username }}
+      ip_adress: ${{ needs.start_terraform.outputs.ip_adress }}
+    secrets: inherit
+        

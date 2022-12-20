@@ -1,0 +1,40 @@
+version: '3.3'
+
+services:
+  web-app:
+    build:
+      context: /opt/application/app
+      dockerfile: /opt/application/app/Dockerfile
+    network_mode: "host"
+    environment:
+      - MYSQL_ROOT_PASSWORD=D3v%ps1234
+      - MYSQL_USER=astanil
+      - MYSQL_PASSWORD=D3v%ps1234
+      - MYSQL_HOST=moon-vm
+      - MYSQL_DATABASE=student
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./app:/var/www/html
+      - type: bind
+        source: ./conf/apache2.conf
+        target: /etc/apache2/apache2.conf
+        read_only: true
+
+  db:
+    container_name: events_db
+    image: mysql:8.0.30
+    network_mode: "host"
+    environment:
+      - MYSQL_ROOT_PASSWORD=D3v%ps1234
+      - MYSQL_USER=astanil
+      - MYSQL_PASSWORD=D3v%ps1234
+      - MYSQL_HOST=moon-vm
+      - MYSQL_DATABASE=student
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db:

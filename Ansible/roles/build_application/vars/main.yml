@@ -1,0 +1,4 @@
+---
+
+project_directory: /opt/application
+enable_docker_pull: yes

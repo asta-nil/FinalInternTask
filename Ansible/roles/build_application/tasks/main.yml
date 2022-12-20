@@ -1,0 +1,40 @@
+- name: Create configuration dir
+  file:
+    path: "{{ project_directory }}/conf"
+    state: directory
+
+- name: Copy docker-compose file
+  template:
+    src: templates/docker-compose.yaml
+    dest: "{{ project_directory }}/docker-compose.yaml"
+
+- name: Copy apache configuration files
+  copy:
+    src: apache2.conf
+    dest: "{{ project_directory }}/conf/apache2.conf"
+
+- name: Start docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Ports 80 setting
+  ufw:
+    state: enabled
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Port 22 setting
+  ufw:
+    state: enabled
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Build applications
+  docker_compose:
+    project_src: "{{ project_directory }}"
+    remove_orphans: yes
+    pull: "{{ enable_docker_pull }}"
